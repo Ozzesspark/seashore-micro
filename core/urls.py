@@ -95,6 +95,10 @@ from core.views.group_collection_views import (
     group_collection_session_detail,
     group_collection_approve,
     group_savings_collection,
+    group_combined_collection,
+    group_combined_collection_post,
+    group_combined_session_detail,
+    group_combined_collection_approve,
     group_savings_collection_post,
     group_savings_session_detail,
     group_savings_collection_approve,
@@ -123,6 +127,7 @@ from core.views.accounting_views import (
     chart_of_accounts_detail,
     chart_of_accounts_create,
     chart_of_accounts_edit,
+    coa_post_opening_balance,
     # Journal Entries
     journal_entry_list,
     journal_entry_detail,
@@ -386,6 +391,12 @@ urlpatterns = [
     path('groups/savings-collections/<uuid:session_id>/', group_savings_session_detail, name='group_savings_session_detail'),
     path('groups/savings-collections/<uuid:session_id>/approve/', group_savings_collection_approve, name='group_savings_collection_approve'),
 
+    # Group Collections - Combined (Loans + Savings)
+    path('groups/<uuid:group_id>/collect-all/', group_combined_collection, name='group_combined_collection'),
+    path('groups/<uuid:group_id>/collect-all/post/', group_combined_collection_post, name='group_combined_collection_post'),
+    path('groups/combined-collections/<uuid:session_id>/', group_combined_session_detail, name='group_combined_session_detail'),
+    path('groups/combined-collections/<uuid:session_id>/approve/', group_combined_collection_approve, name='group_combined_collection_approve'),
+
     # =========================================================================
     # USERS/STAFF MANAGEMENT
     # =========================================================================
@@ -509,6 +520,7 @@ urlpatterns = [
     path('accounting/coa/create/', chart_of_accounts_create, name='coa_create'),
     path('accounting/coa/<uuid:account_id>/', chart_of_accounts_detail, name='coa_detail'),
     path('accounting/coa/<uuid:account_id>/edit/', chart_of_accounts_edit, name='coa_edit'),
+    path('accounting/coa/<uuid:account_id>/opening-balance/', coa_post_opening_balance, name='coa_opening_balance'),
 
     # Journal Entries
     path('accounting/journals/', journal_entry_list, name='journal_entry_list'),

@@ -41,7 +41,13 @@
                                 {% endfor %}
                             </span>
                             {% else %}
-                            <span class="text-red-600 dark:text-red-400 font-semibold">✗ MISSING</span>
+                            <div class="flex items-center justify-center gap-2">
+                                <span class="text-red-600 dark:text-red-400 font-semibold">✗ MISSING</span>
+                                <a href="{% url 'core:journal_entry_create' %}?transaction_id={{ item.transaction.id }}"
+                                   class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-amber-600 hover:bg-amber-700 text-white rounded transition-colors">
+                                    <i class="fas fa-plus"></i> Create Entry
+                                </a>
+                            </div>
                             {% endif %}
                         </td>
                     </tr>

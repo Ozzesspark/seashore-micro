@@ -31,7 +31,7 @@
                     <div>
                         <p class="text-primary-700 dark:text-primary-400">Total Amount</p>
                         <p class="text-2xl font-bold text-primary-900 dark:text-primary-300">
-                            ₦{% widthratio postings.0.amount 1 1 as total %}{% for posting in postings %}{% if not forloop.first %}{% widthratio total 1 1 as prev_total %}{% widthratio posting.amount 1 1 as current_amount %}{% widthratio prev_total 1 1 as total %}{% endif %}{% endfor %}{{ total_amount|floatformat:2|intcomma }}
+                            ₦{{ total_amount|floatformat:2|intcomma }}
                         </p>
                     </div>
                     <div>
@@ -156,20 +156,16 @@
                         </div>
                     </label>
                 </div>
-                {% if form.action.errors %}
-                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.action.errors.0 }}</p>
-                {% endif %}
             </div>
 
             <!-- Bulk Notes -->
             <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    {{ form.notes.label }}
+                <label for="id_notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Notes
                 </label>
-                {{ form.notes }}
-                {% if form.notes.errors %}
-                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.notes.errors.0 }}</p>
-                {% endif %}
+                <textarea id="id_notes" name="notes" rows="3"
+                          class="block w-full px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-amber-500 focus:ring-amber-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="Optional notes about this decision"></textarea>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Optional notes for all postings (required for rejection, minimum 10 characters)
                 </p>

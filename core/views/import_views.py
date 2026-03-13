@@ -45,7 +45,7 @@ CLIENT_CSV_HEADERS = [
 @login_required
 def import_clients(request):
     checker = PermissionChecker(request.user)
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         raise PermissionDenied
 
     if request.GET.get('template') == '1':
@@ -148,7 +148,7 @@ LOAN_CSV_HEADERS = [
 @login_required
 def import_loans(request):
     checker = PermissionChecker(request.user)
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         raise PermissionDenied
 
     if request.GET.get('template') == '1':
@@ -233,7 +233,7 @@ SAVINGS_CSV_HEADERS = [
 @login_required
 def import_savings(request):
     checker = PermissionChecker(request.user)
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         raise PermissionDenied
 
     if request.GET.get('template') == '1':

@@ -142,12 +142,6 @@
     </div>
     {% endif %}
 
-    <!-- Loan Detail Tables per Bucket -->
-    {% for bucket_key, bucket_label, border_color in buckets_meta %}
-    {% with bucket=summary|dictsort:bucket_key %}
-    {% endwith %}
-    {% endfor %}
-
     <!-- PAR 90+ — highest priority -->
     {% if summary.par_90plus.count %}
     <div class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -156,31 +150,31 @@
                 <i class="fas fa-exclamation-circle mr-2"></i>PAR 90+ Days
                 <span class="ml-2 text-sm font-normal text-gray-500">({{ summary.par_90plus.count }} loans)</span>
             </h3>
-            <span class="text-sm font-semibold text-red-700 dark:text-red-400">₦{{ summary.par_90plus.balance|floatformat:2|intcomma }}</span>
+            <span class="text-sm font-semibold text-red-700 dark:text-red-400 whitespace-nowrap">₦{{ summary.par_90plus.balance|floatformat:2|intcomma }}</span>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-red-50 dark:bg-red-900/10">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Loan No.</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Client</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Branch</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">Outstanding</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">Days Overdue</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">Action</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Loan No.</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Client</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Branch</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Outstanding</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Days Overdue</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                     {% for loan, days in summary.par_90plus.items %}
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td class="px-4 py-3 font-mono text-gray-800 dark:text-gray-200">{{ loan.loan_number }}</td>
-                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ loan.client.get_full_name }}</td>
-                        <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ loan.branch.name|default:"—" }}</td>
-                        <td class="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200">₦{{ loan.outstanding_balance|floatformat:2|intcomma }}</td>
-                        <td class="px-4 py-3 text-right font-bold text-red-600 dark:text-red-400">{{ days }}d</td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-3 text-sm font-mono whitespace-nowrap text-gray-800 dark:text-gray-200">{{ loan.loan_number }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">{{ loan.client.get_full_name }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">{{ loan.branch.name|default:"—" }}</td>
+                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap font-semibold text-gray-800 dark:text-gray-200">₦{{ loan.outstanding_balance|floatformat:2|intcomma }}</td>
+                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap font-bold text-red-600 dark:text-red-400">{{ days }}d</td>
+                        <td class="px-4 py-3 text-sm text-center whitespace-nowrap">
                             <a href="{% url 'core:loan_detail' loan.id %}"
-                               class="text-amber-600 hover:text-amber-700 text-xs font-medium">View</a>
+                               class="text-amber-600 hover:text-amber-700 dark:text-amber-400 text-xs font-medium">View</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -198,31 +192,31 @@
                 <i class="fas fa-exclamation-triangle mr-2"></i>PAR 61–90 Days
                 <span class="ml-2 text-sm font-normal text-gray-500">({{ summary.par_61_90.count }} loans)</span>
             </h3>
-            <span class="text-sm font-semibold text-red-500">₦{{ summary.par_61_90.balance|floatformat:2|intcomma }}</span>
+            <span class="text-sm font-semibold text-red-500 dark:text-red-400 whitespace-nowrap">₦{{ summary.par_61_90.balance|floatformat:2|intcomma }}</span>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-red-50 dark:bg-red-900/10">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Loan No.</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Client</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Branch</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">Outstanding</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">Days Overdue</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">Action</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Loan No.</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Client</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Branch</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Outstanding</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Days Overdue</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                     {% for loan, days in summary.par_61_90.items %}
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td class="px-4 py-3 font-mono text-gray-800 dark:text-gray-200">{{ loan.loan_number }}</td>
-                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ loan.client.get_full_name }}</td>
-                        <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ loan.branch.name|default:"—" }}</td>
-                        <td class="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200">₦{{ loan.outstanding_balance|floatformat:2|intcomma }}</td>
-                        <td class="px-4 py-3 text-right font-bold text-red-500">{{ days }}d</td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-3 text-sm font-mono whitespace-nowrap text-gray-800 dark:text-gray-200">{{ loan.loan_number }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">{{ loan.client.get_full_name }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">{{ loan.branch.name|default:"—" }}</td>
+                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap font-semibold text-gray-800 dark:text-gray-200">₦{{ loan.outstanding_balance|floatformat:2|intcomma }}</td>
+                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap font-bold text-red-500 dark:text-red-400">{{ days }}d</td>
+                        <td class="px-4 py-3 text-sm text-center whitespace-nowrap">
                             <a href="{% url 'core:loan_detail' loan.id %}"
-                               class="text-amber-600 hover:text-amber-700 text-xs font-medium">View</a>
+                               class="text-amber-600 hover:text-amber-700 dark:text-amber-400 text-xs font-medium">View</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -240,31 +234,31 @@
                 <i class="fas fa-clock mr-2"></i>PAR 31–60 Days
                 <span class="ml-2 text-sm font-normal text-gray-500">({{ summary.par_31_60.count }} loans)</span>
             </h3>
-            <span class="text-sm font-semibold text-orange-600">₦{{ summary.par_31_60.balance|floatformat:2|intcomma }}</span>
+            <span class="text-sm font-semibold text-orange-600 dark:text-orange-400 whitespace-nowrap">₦{{ summary.par_31_60.balance|floatformat:2|intcomma }}</span>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-orange-50 dark:bg-orange-900/10">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Loan No.</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Client</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Branch</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">Outstanding</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">Days Overdue</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">Action</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Loan No.</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Client</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Branch</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Outstanding</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Days Overdue</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                     {% for loan, days in summary.par_31_60.items %}
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td class="px-4 py-3 font-mono text-gray-800 dark:text-gray-200">{{ loan.loan_number }}</td>
-                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ loan.client.get_full_name }}</td>
-                        <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ loan.branch.name|default:"—" }}</td>
-                        <td class="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200">₦{{ loan.outstanding_balance|floatformat:2|intcomma }}</td>
-                        <td class="px-4 py-3 text-right font-bold text-orange-600">{{ days }}d</td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-3 text-sm font-mono whitespace-nowrap text-gray-800 dark:text-gray-200">{{ loan.loan_number }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">{{ loan.client.get_full_name }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">{{ loan.branch.name|default:"—" }}</td>
+                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap font-semibold text-gray-800 dark:text-gray-200">₦{{ loan.outstanding_balance|floatformat:2|intcomma }}</td>
+                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap font-bold text-orange-600 dark:text-orange-400">{{ days }}d</td>
+                        <td class="px-4 py-3 text-sm text-center whitespace-nowrap">
                             <a href="{% url 'core:loan_detail' loan.id %}"
-                               class="text-amber-600 hover:text-amber-700 text-xs font-medium">View</a>
+                               class="text-amber-600 hover:text-amber-700 dark:text-amber-400 text-xs font-medium">View</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -282,31 +276,31 @@
                 <i class="fas fa-info-circle mr-2"></i>PAR 1–30 Days
                 <span class="ml-2 text-sm font-normal text-gray-500">({{ summary.par_1_30.count }} loans)</span>
             </h3>
-            <span class="text-sm font-semibold text-yellow-600">₦{{ summary.par_1_30.balance|floatformat:2|intcomma }}</span>
+            <span class="text-sm font-semibold text-yellow-600 dark:text-yellow-400 whitespace-nowrap">₦{{ summary.par_1_30.balance|floatformat:2|intcomma }}</span>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-yellow-50 dark:bg-yellow-900/10">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Loan No.</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Client</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Branch</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">Outstanding</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">Days Overdue</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">Action</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Loan No.</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Client</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Branch</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Outstanding</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Days Overdue</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                     {% for loan, days in summary.par_1_30.items %}
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td class="px-4 py-3 font-mono text-gray-800 dark:text-gray-200">{{ loan.loan_number }}</td>
-                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ loan.client.get_full_name }}</td>
-                        <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ loan.branch.name|default:"—" }}</td>
-                        <td class="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200">₦{{ loan.outstanding_balance|floatformat:2|intcomma }}</td>
-                        <td class="px-4 py-3 text-right font-bold text-yellow-600">{{ days }}d</td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-3 text-sm font-mono whitespace-nowrap text-gray-800 dark:text-gray-200">{{ loan.loan_number }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">{{ loan.client.get_full_name }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">{{ loan.branch.name|default:"—" }}</td>
+                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap font-semibold text-gray-800 dark:text-gray-200">₦{{ loan.outstanding_balance|floatformat:2|intcomma }}</td>
+                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap font-bold text-yellow-600 dark:text-yellow-400">{{ days }}d</td>
+                        <td class="px-4 py-3 text-sm text-center whitespace-nowrap">
                             <a href="{% url 'core:loan_detail' loan.id %}"
-                               class="text-amber-600 hover:text-amber-700 text-xs font-medium">View</a>
+                               class="text-amber-600 hover:text-amber-700 dark:text-amber-400 text-xs font-medium">View</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -324,31 +318,31 @@
                 <i class="fas fa-check-circle mr-2"></i>Current (0 Days)
                 <span class="ml-2 text-sm font-normal text-gray-500">({{ summary.current.count }} loans)</span>
             </h3>
-            <span class="text-sm font-semibold text-green-600">₦{{ summary.current.balance|floatformat:2|intcomma }}</span>
+            <span class="text-sm font-semibold text-green-600 dark:text-green-400 whitespace-nowrap">₦{{ summary.current.balance|floatformat:2|intcomma }}</span>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-green-50 dark:bg-green-900/10">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Loan No.</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Client</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Branch</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400">Outstanding</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Next Due</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">Action</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Loan No.</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Client</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Branch</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Outstanding</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Next Due</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                     {% for loan, days in summary.current.items %}
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td class="px-4 py-3 font-mono text-gray-800 dark:text-gray-200">{{ loan.loan_number }}</td>
-                        <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ loan.client.get_full_name }}</td>
-                        <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ loan.branch.name|default:"—" }}</td>
-                        <td class="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-200">₦{{ loan.outstanding_balance|floatformat:2|intcomma }}</td>
-                        <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ loan.next_repayment_date|date:"d M Y"|default:"—" }}</td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-4 py-3 text-sm font-mono whitespace-nowrap text-gray-800 dark:text-gray-200">{{ loan.loan_number }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-700 dark:text-gray-300">{{ loan.client.get_full_name }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">{{ loan.branch.name|default:"—" }}</td>
+                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap font-semibold text-gray-800 dark:text-gray-200">₦{{ loan.outstanding_balance|floatformat:2|intcomma }}</td>
+                        <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">{{ loan.next_repayment_date|date:"d M Y"|default:"—" }}</td>
+                        <td class="px-4 py-3 text-sm text-center whitespace-nowrap">
                             <a href="{% url 'core:loan_detail' loan.id %}"
-                               class="text-amber-600 hover:text-amber-700 text-xs font-medium">View</a>
+                               class="text-amber-600 hover:text-amber-700 dark:text-amber-400 text-xs font-medium">View</a>
                         </td>
                     </tr>
                     {% endfor %}

@@ -46,7 +46,7 @@
                     <i class="fas fa-edit mr-2"></i>Edit
                 </a>
                 {% endif %}
-                {% if group.status == 'pending' and checker.is_manager or checker.is_admin_or_director %}
+                {% if group.status == 'pending' and checker.can_manage_groups %}
                 <a href="{% url 'core:group_approve' group.id %}"
                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
                     <i class="fas fa-check-circle mr-2"></i>Approve
@@ -338,14 +338,14 @@
                         <span>Bulk Add Members</span>
                     </a>
                     {% endif %}
-                    {% if group.status == 'pending' and checker.is_manager or checker.is_admin_or_director %}
+                    {% if group.status == 'pending' and checker.can_manage_groups %}
                     <a href="{% url 'core:group_approve' group.id %}"
                        class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-green-600 dark:text-green-400">
                         <i class="fas fa-check-circle"></i>
                         <span>Approve Group</span>
                     </a>
                     {% endif %}
-                    {% if pending_requests and checker.is_manager or checker.is_admin_or_director %}
+                    {% if pending_requests and checker.can_manage_groups %}
                     <a href="{% url 'core:group_approve_members_bulk' group.id %}"
                        class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-green-600 dark:text-green-400">
                         <i class="fas fa-check-double"></i>
@@ -364,6 +364,11 @@
                        class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">
                         <i class="fas fa-piggy-bank text-purple-600"></i>
                         <span>Collect Savings</span>
+                    </a>
+                    <a href="{% url 'core:group_combined_collection' group.id %}"
+                       class="flex items-center space-x-3 p-3 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 text-primary-700 dark:text-primary-300 border border-primary-200 dark:border-primary-700">
+                        <i class="fas fa-layer-group text-primary-600"></i>
+                        <span class="font-medium">Collect All Payments</span>
                     </a>
                     {% endif %}
                 </div>

@@ -1112,13 +1112,13 @@ def loan_repayment_approve_bulk(request):
     if not (checker.is_manager() or checker.is_admin_or_director()):
         raise PermissionDenied("You don't have permission to approve repayments")
 
-    # Get pending postings
-    postings = LoanRepaymentPosting.objects.filter(status='pending')
+    # Base queryset: only pending postings within the user's scope
+    postings_qs = LoanRepaymentPosting.objects.filter(status='pending')
 
     if checker.is_manager():
-        postings = postings.filter(branch=request.user.branch)
+        postings_qs = postings_qs.filter(branch=request.user.branch)
 
-    postings = postings.select_related('loan', 'client', 'submitted_by')
+    postings_qs = postings_qs.select_related('loan', 'client', 'submitted_by')
 
     if request.method == 'POST':
         selected_ids = request.POST.getlist('posting_ids')
@@ -1129,7 +1129,7 @@ def loan_repayment_approve_bulk(request):
             messages.error(request, "Please select at least one posting")
             return redirect('core:loan_repayment_approve_bulk')
 
-        selected_postings = postings.filter(id__in=selected_ids)
+        selected_postings = postings_qs.filter(id__in=selected_ids)
 
         success_count = 0
         error_count = 0
@@ -1161,10 +1161,21 @@ def loan_repayment_approve_bulk(request):
 
         return redirect('core:loan_repayment_list')
 
+    # GET: filter to only the IDs selected on the list page
+    ids_param = request.GET.get('ids', '')
+    if ids_param:
+        selected_ids = [i.strip() for i in ids_param.split(',') if i.strip()]
+        postings_qs = postings_qs.filter(id__in=selected_ids)
+
+    total_amount = postings_qs.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    unique_loans_count = postings_qs.values('loan').distinct().count()
+
     context = {
         'page_title': 'Bulk Approve Repayments',
-        'postings': postings,
+        'postings': postings_qs,
         'checker': checker,
+        'total_amount': total_amount,
+        'unique_loans_count': unique_loans_count,
     }
 
     return render(request, 'loans/repayment_approve_bulk.html', context)
@@ -1495,8 +1506,8 @@ def loan_write_off(request, loan_id):
     Permissions: Director and Admin only.
     """
     checker = PermissionChecker(request.user)
-    if not (checker.is_director() or checker.is_admin()):
-        messages.error(request, 'Only Directors and Administrators can write off loans.')
+    if not checker.is_admin_or_director():
+        messages.error(request, 'Only Directors, HR Managers, and Administrators can write off loans.')
         raise PermissionDenied
 
     loan = get_object_or_404(

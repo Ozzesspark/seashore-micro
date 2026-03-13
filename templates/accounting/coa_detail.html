@@ -26,9 +26,14 @@
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-                {% if user.user_role == 'director' or user.user_role == 'admin' %}
+                {% if user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
+                <a href="{% url 'core:coa_opening_balance' account_id=account.id %}"
+                   class="inline-flex items-center px-4 py-2 border border-amber-400 dark:border-amber-600 rounded-md shadow-sm text-sm font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors">
+                    <i class="fas fa-coins mr-2"></i>
+                    Opening Balance
+                </a>
                 <a href="{% url 'core:coa_edit' account_id=account.id %}"
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                     <i class="fas fa-edit mr-2"></i>
                     Edit Account
                 </a>
@@ -71,6 +76,27 @@
             </div>
         </div>
     </div>
+
+    <!-- Negative balance warning -->
+    {% if balance < 0 %}
+    <div class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex flex-wrap items-start gap-3">
+        <i class="fas fa-exclamation-triangle text-red-500 dark:text-red-400 mt-0.5 flex-shrink-0"></i>
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-red-800 dark:text-red-200">Negative balance detected</p>
+            <p class="text-xs text-red-700 dark:text-red-300 mt-1">
+                This account has a balance of <strong>₦{{ balance|floatformat:2|intcomma }}</strong>.
+                For a <em>{{ account.account_type.get_name_display }}</em> account this is abnormal and usually means
+                an opening or funding journal entry was never posted.
+            </p>
+        </div>
+        {% if user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
+        <a href="{% url 'core:coa_opening_balance' account_id=account.id %}"
+           class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded transition-colors">
+            <i class="fas fa-coins"></i> Fix with Opening Balance
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
 
     <!-- Balance Summary -->
     <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">

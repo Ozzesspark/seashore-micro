@@ -37,7 +37,7 @@ class FollowUpTaskForm(forms.ModelForm):
         branch = kwargs.pop('branch', None)
         super().__init__(*args, **kwargs)
         # Restrict assigned_to to active staff/managers in the same branch
-        qs = User.objects.filter(is_active=True, user_role__in=['staff', 'manager', 'director', 'admin'])
+        qs = User.objects.filter(is_active=True, user_role__in=['staff', 'manager', 'director', 'hr', 'admin'])
         if branch:
             qs = qs.filter(branch=branch)
         self.fields['assigned_to'].queryset = qs.order_by('first_name', 'last_name')

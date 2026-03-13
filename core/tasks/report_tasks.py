@@ -128,7 +128,7 @@ def email_daily_par_digest(self):
     # ── Recipients ────────────────────────────────────────────────────────
     recipients = list(
         User.objects.filter(
-            user_role__in=['director', 'admin'],
+            user_role__in=['director', 'hr', 'admin'],
             is_active=True, is_approved=True,
         ).values_list('email', flat=True)
     )
@@ -263,7 +263,7 @@ def email_monthly_summary(self):
     # ── Recipients ────────────────────────────────────────────────────────
     recipients = list(
         User.objects.filter(
-            user_role__in=['director', 'admin'],
+            user_role__in=['director', 'hr', 'admin'],
             is_active=True, is_approved=True,
         ).values_list('email', flat=True)
     )

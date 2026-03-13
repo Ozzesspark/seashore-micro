@@ -2,7 +2,10 @@
 Permission System – Role-based Access Control
 ==============================================
 
-Roles (lowest → highest):   staff  →  manager  →  director  →  admin
+Roles (lowest → highest):   staff  →  manager  →  director / hr  →  admin
+
+The 'hr' (Human Resources Manager) role has the same access level as
+'director' across the entire application.
 
 Every view that mutates state should:
     checker = PermissionChecker(request.user)
@@ -23,52 +26,56 @@ from django.db.models import Q
 class Roles:
     ADMIN    = 'admin'
     DIRECTOR = 'director'
+    HR       = 'hr'
     MANAGER  = 'manager'
     STAFF    = 'staff'
 
 
 class Permissions:
-    """Single source of truth.  Views must never hard-code role lists."""
+    """Single source of truth.  Views must never hard-code role lists.
+
+    HR has the same access level as DIRECTOR everywhere.
+    """
 
     # ── visibility ───────────────────────────────────────────────────
-    VIEW_ALL_BRANCHES  = [Roles.ADMIN, Roles.DIRECTOR]
+    VIEW_ALL_BRANCHES  = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR]
     VIEW_OWN_BRANCH    = [Roles.MANAGER]
     VIEW_ASSIGNED_ONLY = [Roles.STAFF]
 
     # ── approvals ────────────────────────────────────────────────────
-    CAN_APPROVE_CLIENTS      = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER]
-    CAN_APPROVE_LOANS        = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER]
-    CAN_APPROVE_TRANSACTIONS = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER]
-    CAN_APPROVE_USERS        = [Roles.ADMIN, Roles.DIRECTOR]
+    CAN_APPROVE_CLIENTS      = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER]
+    CAN_APPROVE_LOANS        = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER]
+    CAN_APPROVE_TRANSACTIONS = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER]
+    CAN_APPROVE_USERS        = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR]
 
     # ── management ───────────────────────────────────────────────────
-    CAN_MANAGE_BRANCHES          = [Roles.ADMIN, Roles.DIRECTOR]
-    CAN_MANAGE_USERS             = [Roles.ADMIN, Roles.DIRECTOR]
-    CAN_MANAGE_PRODUCTS          = [Roles.ADMIN, Roles.DIRECTOR]
-    CAN_MANAGE_CHART_OF_ACCOUNTS = [Roles.ADMIN, Roles.DIRECTOR]
+    CAN_MANAGE_BRANCHES          = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR]
+    CAN_MANAGE_USERS             = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR]
+    CAN_MANAGE_PRODUCTS          = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR]
+    CAN_MANAGE_CHART_OF_ACCOUNTS = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR]
 
     # ── financial ────────────────────────────────────────────────────
-    CAN_DISBURSE_LOANS       = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER]
-    CAN_PROCESS_TRANSACTIONS = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER, Roles.STAFF]
-    CAN_VIEW_REPORTS         = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER]
-    CAN_VIEW_FINANCIALS      = [Roles.ADMIN, Roles.DIRECTOR]
+    CAN_DISBURSE_LOANS       = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER]
+    CAN_PROCESS_TRANSACTIONS = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER, Roles.STAFF]
+    CAN_VIEW_REPORTS         = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER]
+    CAN_VIEW_FINANCIALS      = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR]
 
     # ── creation ─────────────────────────────────────────────────────
-    CAN_CREATE_CLIENTS  = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER, Roles.STAFF]
-    CAN_CREATE_LOANS    = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER, Roles.STAFF]
-    CAN_RECORD_PAYMENTS = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER, Roles.STAFF]
+    CAN_CREATE_CLIENTS  = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER, Roles.STAFF]
+    CAN_CREATE_LOANS    = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER, Roles.STAFF]
+    CAN_RECORD_PAYMENTS = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER, Roles.STAFF]
 
     # ── client lifecycle  ────────────────────────────────────────────
     # Full-form edit.  Staff excluded deliberately.
-    CAN_EDIT_CLIENT          = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER]
+    CAN_EDIT_CLIENT          = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER]
     # Soft-delete.  Admin only, no exceptions.
     CAN_DELETE_CLIENT        = [Roles.ADMIN]
     # Approve / reject a pending client.
-    CAN_APPROVE_REJECT_CLIENT = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER]
+    CAN_APPROVE_REJECT_CLIENT = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER]
     # Toggle active / inactive.
-    CAN_TOGGLE_CLIENT_STATUS  = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER]
+    CAN_TOGGLE_CLIENT_STATUS  = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER]
     # Reassign loan officer.
-    CAN_ASSIGN_CLIENT_STAFF   = [Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER]
+    CAN_ASSIGN_CLIENT_STAFF   = [Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER]
 
 
 # =============================================================================
@@ -85,9 +92,11 @@ class PermissionChecker:
     # ── role helpers ─────────────────────────────────────────────────
     def is_admin(self):             return self.role == Roles.ADMIN
     def is_director(self):          return self.role == Roles.DIRECTOR
+    def is_hr(self):                return self.role == Roles.HR
     def is_manager(self):           return self.role == Roles.MANAGER
     def is_staff(self):             return self.role == Roles.STAFF
-    def is_admin_or_director(self): return self.role in (Roles.ADMIN, Roles.DIRECTOR)
+    # HR has director-level access everywhere — always include HR alongside DIRECTOR
+    def is_admin_or_director(self): return self.role in (Roles.ADMIN, Roles.DIRECTOR, Roles.HR)
 
     # =========================================================================
     # VIEW / READ
@@ -272,12 +281,12 @@ class PermissionChecker:
     # =========================================================================
 
     def can_create_savings_account(self):
-        return self.role in (Roles.STAFF, Roles.MANAGER, Roles.DIRECTOR, Roles.ADMIN)
+        return self.role in (Roles.STAFF, Roles.MANAGER, Roles.DIRECTOR, Roles.HR, Roles.ADMIN)
 
     def can_edit_savings_account(self, account):
         if not self.user or not self.user.is_authenticated:
             return False
-        if self.role in (Roles.ADMIN, Roles.DIRECTOR):
+        if self.role in (Roles.ADMIN, Roles.DIRECTOR, Roles.HR):
             return True
         if self.is_manager():
             return account.branch_id == self.user.branch_id if self.user.branch_id else False
@@ -289,12 +298,12 @@ class PermissionChecker:
         return False
 
     def can_approve_accounts(self):
-        return self.role in (Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER)
+        return self.role in (Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER)
 
     def can_close_savings_account(self, account):
         if not self.user or not self.user.is_authenticated:
             return False
-        if self.role in (Roles.ADMIN, Roles.DIRECTOR):
+        if self.role in (Roles.ADMIN, Roles.DIRECTOR, Roles.HR):
             return True
         if self.is_manager():
             return account.branch_id == self.user.branch_id if self.user.branch_id else False
@@ -303,7 +312,7 @@ class PermissionChecker:
     def can_delete_savings_account(self, account):
         if not self.user or not self.user.is_authenticated:
             return False
-        return self.role in (Roles.DIRECTOR, Roles.ADMIN)
+        return self.role in (Roles.DIRECTOR, Roles.HR, Roles.ADMIN)
 
     def filter_savings_accounts(self, queryset):
         if not self.user or not self.user.is_authenticated:
@@ -321,7 +330,7 @@ class PermissionChecker:
     # =========================================================================
 
     def can_manage_groups(self):
-        return self.role in (Roles.ADMIN, Roles.DIRECTOR, Roles.MANAGER)
+        return self.role in (Roles.ADMIN, Roles.DIRECTOR, Roles.HR, Roles.MANAGER)
 
     def can_view_group(self, group):
         if self.can_view_all_branches():

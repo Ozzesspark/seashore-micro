@@ -411,6 +411,15 @@ class JournalEntryLineForm(forms.ModelForm):
             ),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # debit_amount and credit_amount are DecimalField without blank=True on the model,
+        # so Django makes them required=True by default. We need required=False here because
+        # each line only ever fills ONE of the two fields (the other stays empty).
+        # The clean() method below enforces that exactly one is non-zero.
+        self.fields['debit_amount'].required = False
+        self.fields['credit_amount'].required = False
+
     def clean(self):
         cleaned_data = super().clean()
         debit = cleaned_data.get('debit_amount') or Decimal('0')
@@ -423,6 +432,9 @@ class JournalEntryLineForm(forms.ModelForm):
         if debit == 0 and credit == 0:
             raise ValidationError('Line must have either debit or credit amount')
 
+        # Write normalised values back so the model instance never receives None
+        cleaned_data['debit_amount'] = debit
+        cleaned_data['credit_amount'] = credit
         return cleaned_data
 
 
@@ -434,10 +446,82 @@ JournalEntryLineFormSet = inlineformset_factory(
     JournalEntryLine,
     form=JournalEntryLineForm,
     extra=4,  # Show 4 blank lines by default
-    min_num=2,  # Minimum 2 lines required
-    validate_min=True,
+    min_num=2,
+    validate_min=False,  # validate_min breaks for new-object inline formsets: all forms
+                         # count as "extra", making the check always fail (0 < min_num).
+                         # Minimum-lines enforcement is handled by the view balance check
+                         # and the JS remove-row guard instead.
     can_delete=True
 )
+
+
+# =============================================================================
+# OPENING BALANCE FORM
+# =============================================================================
+
+class OpeningBalanceForm(forms.Form):
+    """Post an opening balance to a COA account via a 2-line journal entry."""
+
+    _FIELD_CSS = (
+        'block w-full px-3 py-2 rounded-md border border-gray-300 shadow-sm '
+        'focus:border-amber-500 focus:ring-amber-500 sm:text-sm '
+        'dark:bg-gray-700 dark:border-gray-600 dark:text-white'
+    )
+
+    amount = forms.DecimalField(
+        label='Opening Balance Amount (₦)',
+        min_value=Decimal('0.01'),
+        max_digits=15,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': _FIELD_CSS,
+            'step': '0.01',
+            'placeholder': '0.00',
+        }),
+    )
+
+    as_of_date = forms.DateField(
+        label='As-of Date',
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': _FIELD_CSS,
+        }),
+    )
+
+    offsetting_account = forms.ModelChoiceField(
+        label='Offsetting Account (other side of entry)',
+        queryset=ChartOfAccounts.objects.filter(is_active=True).order_by('gl_code'),
+        help_text='Typically an Equity or Capital account (e.g. "Opening Balance Equity").',
+        widget=forms.Select(attrs={'class': _FIELD_CSS}),
+    )
+
+    branch = forms.ModelChoiceField(
+        label='Branch',
+        queryset=Branch.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': _FIELD_CSS}),
+    )
+
+    description = forms.CharField(
+        label='Description / Narration',
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': _FIELD_CSS,
+            'placeholder': 'e.g. Opening balance as at 01 Jan 2026',
+        }),
+    )
+
+    def __init__(self, *args, account=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if account:
+            # Pre-fill description and exclude self from offsetting choices
+            self.fields['description'].initial = f'Opening balance — {account.account_name}'
+            self.fields['offsetting_account'].queryset = (
+                ChartOfAccounts.objects.filter(is_active=True)
+                .exclude(pk=account.pk)
+                .order_by('gl_code')
+            )
+            if account.branch:
+                self.fields['branch'].initial = account.branch
 
 
 # =============================================================================

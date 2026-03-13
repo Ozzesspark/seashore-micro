@@ -27,7 +27,8 @@ from core.models import (
 from core.forms.accounting_forms import (
     DateRangeForm, TrialBalanceForm, ProfitLossForm, BalanceSheetForm,
     GeneralLedgerForm, JournalEntrySearchForm,
-    JournalEntryForm, JournalEntryLineFormSet, JournalReversalForm
+    JournalEntryForm, JournalEntryLineFormSet, JournalReversalForm,
+    OpeningBalanceForm
 )
 from core.permissions import PermissionChecker
 from core.utils.accounting_helpers import create_journal_entry
@@ -61,7 +62,7 @@ def accounting_dashboard(request):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         messages.error(request, 'You do not have permission to access the accounting module.')
         raise PermissionDenied
 
@@ -141,7 +142,7 @@ def chart_of_accounts_list(request):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         messages.error(request, 'You do not have permission to view Chart of Accounts.')
         raise PermissionDenied
 
@@ -212,7 +213,7 @@ def chart_of_accounts_detail(request, account_id):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         messages.error(request, 'You do not have permission to view account details.')
         raise PermissionDenied
 
@@ -260,7 +261,7 @@ def chart_of_accounts_create(request):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_director() or checker.is_admin()):
+    if not checker.is_admin_or_director():
         messages.error(request, 'Only Directors and Administrators can create GL accounts.')
         raise PermissionDenied
 
@@ -321,7 +322,7 @@ def chart_of_accounts_edit(request, account_id):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_director() or checker.is_admin()):
+    if not checker.is_admin_or_director():
         messages.error(request, 'Only Directors and Administrators can edit GL accounts.')
         raise PermissionDenied
 
@@ -374,6 +375,101 @@ def chart_of_accounts_edit(request, account_id):
     }
 
     return render(request, 'accounting/coa_form.html', context)
+
+
+@login_required
+@db_transaction.atomic
+def coa_post_opening_balance(request, account_id):
+    """
+    Post an opening (or correcting) balance to a GL account.
+    Creates a balanced 2-line journal entry posted immediately.
+
+    Permissions: Director, Admin only
+    """
+    checker = PermissionChecker(request.user)
+    if not checker.is_admin_or_director():
+        messages.error(request, 'Only Directors and Administrators can post opening balances.')
+        raise PermissionDenied
+
+    account = get_object_or_404(
+        ChartOfAccounts.objects.select_related('account_type', 'branch'),
+        id=account_id
+    )
+
+    # Current balance for display
+    from django.db.models import Sum as _Sum
+    debit_total  = account.journal_lines.aggregate(t=_Sum('debit_amount'))['t']  or Decimal('0')
+    credit_total = account.journal_lines.aggregate(t=_Sum('credit_amount'))['t'] or Decimal('0')
+    if account.account_type.normal_balance == 'debit':
+        current_balance = debit_total - credit_total
+    else:
+        current_balance = credit_total - debit_total
+
+    if request.method == 'POST':
+        form = OpeningBalanceForm(request.POST, account=account)
+        if form.is_valid():
+            amount           = form.cleaned_data['amount']
+            as_of_date       = form.cleaned_data['as_of_date']
+            offsetting_acct  = form.cleaned_data['offsetting_account']
+            branch           = form.cleaned_data['branch']
+            description      = form.cleaned_data['description']
+
+            # Build the 2-line balanced journal entry
+            journal = JournalEntry(
+                journal_number=JournalEntry.generate_journal_number(),
+                entry_type='adjustment',
+                status='posted',
+                transaction_date=as_of_date,
+                posting_date=as_of_date,
+                branch=branch,
+                description=description,
+                reference_number='OPENING-BAL',
+                created_by=request.user,
+                posted_by=request.user,
+            )
+            journal.save()
+
+            if account.account_type.normal_balance == 'debit':
+                # Asset / Expense: DR this account, CR offsetting
+                JournalEntryLine.objects.create(
+                    journal_entry=journal, account=account,
+                    debit_amount=amount, credit_amount=Decimal('0'),
+                    description=description,
+                )
+                JournalEntryLine.objects.create(
+                    journal_entry=journal, account=offsetting_acct,
+                    debit_amount=Decimal('0'), credit_amount=amount,
+                    description=description,
+                )
+            else:
+                # Liability / Income / Equity: CR this account, DR offsetting
+                JournalEntryLine.objects.create(
+                    journal_entry=journal, account=account,
+                    debit_amount=Decimal('0'), credit_amount=amount,
+                    description=description,
+                )
+                JournalEntryLine.objects.create(
+                    journal_entry=journal, account=offsetting_acct,
+                    debit_amount=amount, credit_amount=Decimal('0'),
+                    description=description,
+                )
+
+            messages.success(
+                request,
+                f'Opening balance of ₦{amount:,.2f} posted as {journal.journal_number}. '
+                f'The account balance is now updated.'
+            )
+            return redirect('core:coa_detail', account_id=account.id)
+    else:
+        form = OpeningBalanceForm(account=account)
+
+    context = {
+        'page_title': f'Post Opening Balance — {account.gl_code}',
+        'account': account,
+        'current_balance': current_balance,
+        'form': form,
+    }
+    return render(request, 'accounting/coa_opening_balance.html', context)
 
 
 # =============================================================================
@@ -491,15 +587,26 @@ def journal_entry_detail(request, entry_id):
 @db_transaction.atomic
 def journal_entry_create(request):
     """
-    Create manual journal entry with lines
+    Create manual journal entry with lines.
+    Accepts optional ?transaction_id=<id> to pre-fill details and link the
+    resulting journal entry back to the source transaction (fixing audit gaps).
 
     Permissions: Manager, Director, Admin with accounting permissions
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         messages.error(request, 'You do not have permission to create journal entries.')
         raise PermissionDenied
+
+    # ── Resolve optional linked transaction ──────────────────────────────────
+    source_transaction = None
+    txn_id = request.POST.get('transaction_id') or request.GET.get('transaction_id')
+    if txn_id:
+        try:
+            source_transaction = Transaction.objects.select_related('branch', 'client').get(pk=txn_id)
+        except (Transaction.DoesNotExist, ValueError):
+            messages.warning(request, 'Linked transaction not found — proceeding without it.')
 
     if request.method == 'POST':
         form = JournalEntryForm(request.POST)
@@ -528,7 +635,9 @@ def journal_entry_create(request):
                     # Create journal entry
                     journal = form.save(commit=False)
                     journal.created_by = request.user
-                    journal.status = 'draft'  # Manual entries start as draft
+                    journal.status = 'draft'
+                    if source_transaction:
+                        journal.transaction = source_transaction
                     journal.save()
 
                     # Save lines
@@ -545,13 +654,28 @@ def journal_entry_create(request):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = JournalEntryForm()
+        # Pre-fill form fields from the linked transaction (GET request)
+        initial = {}
+        if source_transaction:
+            initial = {
+                'transaction_date': source_transaction.transaction_date,
+                'branch': source_transaction.branch,
+                'description': (
+                    f"{source_transaction.get_transaction_type_display()} — "
+                    f"{source_transaction.transaction_ref} — "
+                    f"₦{source_transaction.amount:,.2f}"
+                ),
+                'reference_number': source_transaction.transaction_ref,
+                'entry_type': 'correction',
+            }
+        form = JournalEntryForm(initial=initial)
         formset = JournalEntryLineFormSet()
 
     context = {
         'page_title': 'Create Manual Journal Entry',
         'form': form,
         'formset': formset,
+        'source_transaction': source_transaction,
     }
 
     return render(request, 'accounting/journal_entry_form.html', context)
@@ -567,7 +691,7 @@ def journal_entry_post(request, entry_id):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_director() or checker.is_admin()):
+    if not checker.is_admin_or_director():
         messages.error(request, 'Only Directors and Administrators can post journal entries.')
         raise PermissionDenied
 
@@ -623,7 +747,7 @@ def journal_entry_reverse(request, entry_id):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_director() or checker.is_admin()):
+    if not checker.is_admin_or_director():
         messages.error(request, 'Only Directors and Administrators can reverse journal entries.')
         raise PermissionDenied
 
@@ -702,7 +826,7 @@ def report_trial_balance(request):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         messages.error(request, 'You do not have permission to view financial reports.')
         raise PermissionDenied
 
@@ -798,7 +922,7 @@ def report_profit_loss(request):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         messages.error(request, 'You do not have permission to view financial reports.')
         raise PermissionDenied
 
@@ -903,7 +1027,7 @@ def report_balance_sheet(request):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         messages.error(request, 'You do not have permission to view financial reports.')
         raise PermissionDenied
 
@@ -1034,7 +1158,7 @@ def report_general_ledger(request):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         messages.error(request, 'You do not have permission to view financial reports.')
         raise PermissionDenied
 
@@ -1126,7 +1250,7 @@ def report_cash_flow(request):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         messages.error(request, 'You do not have permission to view financial reports.')
         raise PermissionDenied
 
@@ -1212,7 +1336,7 @@ def report_transaction_audit(request):
     """
     checker = PermissionChecker(request.user)
 
-    if not (checker.is_director() or checker.is_admin()):
+    if not checker.is_admin_or_director():
         messages.error(request, 'Only Directors and Administrators can view audit reports.')
         raise PermissionDenied
 
@@ -1295,7 +1419,7 @@ def report_par_aging(request):
     Permissions: Manager, Director, Admin
     """
     checker = PermissionChecker(request.user)
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         messages.error(request, 'You do not have permission to view this report.')
         raise PermissionDenied
 
@@ -1404,7 +1528,7 @@ def report_loan_officer_performance(request):
     """
     from core.models import User, SavingsAccount
     checker = PermissionChecker(request.user)
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         raise PermissionDenied
 
     today      = timezone.now().date()
@@ -1525,7 +1649,7 @@ def report_savings_maturity(request):
     """
     from core.models import SavingsAccount
     checker = PermissionChecker(request.user)
-    if not (checker.is_manager() or checker.is_director() or checker.is_admin()):
+    if not (checker.is_manager() or checker.is_admin_or_director()):
         raise PermissionDenied
 
     today      = timezone.now().date()
@@ -1616,7 +1740,7 @@ def audit_log(request):
     from auditlog.models import LogEntry
 
     checker = PermissionChecker(request.user)
-    if not (checker.is_director() or checker.is_admin()):
+    if not checker.is_admin_or_director():
         messages.error(request, 'Only Directors and Administrators can view the audit log.')
         raise PermissionDenied
 

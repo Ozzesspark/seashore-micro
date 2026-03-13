@@ -135,7 +135,7 @@
                         </div>
                     </a>
 
-                    {% if user.user_role in 'director,admin' %}
+                    {% if user.user_role in 'director,admin,hr' %}
                     <a href="{% url 'core:report_transaction_audit' %}"
                        class="flex items-center p-4 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border border-red-200 dark:border-red-800 rounded-lg hover:shadow-md transition-all group">
                         <i class="fas fa-clipboard-check text-2xl text-red-600 mr-4 group-hover:scale-110 transition-transform"></i>

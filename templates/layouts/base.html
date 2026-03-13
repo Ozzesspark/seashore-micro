@@ -236,7 +236,7 @@
                         </div>
                     </div>
                     <!-- APPROVALS & REQUESTS - Manager, Director, Admin Only -->
-                    {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' %}
+                    {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
                     <div class="mb-6">
                         <h3 class="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Approvals & Requests</h3>
                         <div class="space-y-1">
@@ -250,12 +250,13 @@
                                     <i class="fas fa-chevron-right text-xs transition-transform" :class="{ 'rotate-90': approvalsExpanded }"></i>
                                 </button>
                                 <div x-show="approvalsExpanded" x-collapse class="ml-8 mt-1 space-y-1">
-                                    <a href="{% url 'core:client_list' %}?status=pending" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Clients</a>
+                                    <a href="{% url 'core:client_list' %}?approval_status=pending" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Clients</a>
                                     <a href="{% url 'core:loan_list' %}?status=pending" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Loans</a>
-                                    <a href="{% url 'core:savings_account_list' %}?status=pending" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Savings</a>
-                                    <a href="{% url 'core:savings_transaction_list' %}?status=pending" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Transactions</a>
-                                    {% if user.user_role == 'director' or user.user_role == 'admin' %}
-                                    <a href="{% url 'core:user_list' %}?status=pending" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">User Approvals</a>
+                                    <a href="{% url 'core:loan_repayment_list' %}?status=pending" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Repayments</a>
+                                    <a href="{% url 'core:savings_account_list' %}?status=pending" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Savings Accounts</a>
+                                    <a href="{% url 'core:savings_transaction_list' %}?status=pending" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Savings Transactions</a>
+                                    {% if user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
+                                    <a href="{% url 'core:user_list' %}?status=pending" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Staff Approvals</a>
                                     {% endif %}
                                 </div>
                             </div>
@@ -279,7 +280,7 @@
                             </a>
                             
                             <!-- Groups - Manager, Director, Admin Only -->
-                            {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' %}
+                            {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
                             <a href="{% url 'core:group_list' %}"
                                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all
                                       {% if 'group' in request.resolver_match.url_name %}
@@ -322,11 +323,11 @@
                                     <a href="{% url 'core:loan_list' %}" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">All Loans</a>
                                     <a href="{% url 'core:loan_create' %}" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">New Application</a>
                                     <a href="{% url 'core:loan_repayment_list' %}" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Repayments</a>
-                                    {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' %}
+                                    {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
                                     <a href="{% url 'core:restructure_list' %}" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Restructure Requests</a>
                                     <a href="{% url 'core:insurance_claim_list' %}" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Insurance Claims</a>
                                     {% endif %}
-                                    {% if user.user_role == 'director' or user.user_role == 'admin' %}
+                                    {% if user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
                                     <a href="{% url 'core:loan_product_list' %}" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Loan Products</a>
                                     {% endif %}
                                 </div>
@@ -388,7 +389,7 @@
                                 <span>Transactions</span>
                             </a>
 
-                            {% if user.user_role == 'director' or user.user_role == 'admin' %}
+                            {% if user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
                             <a href="{% url 'core:savings_product_list' %}"
                                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all
                                       {% if 'savings_product' in request.resolver_match.url_name %}
@@ -404,7 +405,7 @@
                     </div>
                     
                     <!-- COLLECTIONS MANAGEMENT - Staff, Manager, Director, Admin -->
-                    {% if user.user_role in 'staff,manager,director,admin' %}
+                    {% if user.user_role in 'staff,manager' %}
                     <div class="mb-6">
                         <h3 class="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Collections</h3>
                         <div class="space-y-1">
@@ -432,7 +433,7 @@
                     {% endif %}
 
                     <!-- ACCOUNTING & REPORTS - Manager, Director, Admin -->
-                    {% if user.user_role in 'manager,director,admin' %}
+                    {% if user.user_role in 'manager,director,admin,hr' %}
                     <div class="mb-6">
                         <h3 class="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Accounting & Reports</h3>
                         <div class="space-y-1">
@@ -526,7 +527,7 @@
                                     <a href="{% url 'core:report_savings_maturity' %}" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                                         Savings Maturity
                                     </a>
-                                    {% if user.user_role in 'director,admin' %}
+                                    {% if user.user_role in 'director,admin,hr' %}
                                     <a href="{% url 'core:report_transaction_audit' %}" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                                         Transaction Audit
                                     </a>
@@ -541,7 +542,7 @@
                     {% endif %}
 
                     <!-- DATA MANAGEMENT - Manager and above -->
-                    {% if user.user_role in 'manager,director,admin' %}
+                    {% if user.user_role in 'manager,director,admin,hr' %}
                     <div class="mb-6">
                         <h3 class="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Data Management</h3>
                         <div class="space-y-1">
@@ -559,7 +560,7 @@
                     {% endif %}
 
                     <!-- SYSTEM MANAGEMENT - Director & Admin Only -->
-                    {% if user.user_role == 'director' or user.user_role == 'admin' %}
+                    {% if user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
                     <div class="mb-6">
                         <h3 class="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">System Management</h3>
                         <div class="space-y-1">
@@ -681,7 +682,7 @@
     </div>
 
     <!-- APPROVALS & REQUESTS - Manager, Director, Admin Only -->
-    {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' %}
+    {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
     <div class="mb-6">
         <h3 class="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Approvals & Requests</h3>
         <div class="space-y-1">
@@ -695,12 +696,13 @@
                     <i class="fas fa-chevron-right text-xs transition-transform" :class="{ 'rotate-90': approvalsExpanded }"></i>
                 </button>
                 <div x-show="approvalsExpanded" x-collapse class="ml-8 mt-1 space-y-1">
-                    <a href="{% url 'core:client_list' %}?status=pending" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Clients</a>
+                    <a href="{% url 'core:client_list' %}?approval_status=pending" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Clients</a>
                     <a href="{% url 'core:loan_list' %}?status=pending" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Loans</a>
-                    <a href="{% url 'core:savings_account_list' %}?status=pending" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Savings</a>
-                    <a href="{% url 'core:savings_transaction_list' %}?status=pending" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Transactions</a>
-                    {% if user.user_role == 'director' or user.user_role == 'admin' %}
-                    <a href="{% url 'core:user_list' %}?status=pending" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">User Approvals</a>
+                    <a href="{% url 'core:loan_repayment_list' %}?status=pending" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Repayments</a>
+                    <a href="{% url 'core:savings_account_list' %}?status=pending" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Savings Accounts</a>
+                    <a href="{% url 'core:savings_transaction_list' %}?status=pending" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Savings Transactions</a>
+                    {% if user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
+                    <a href="{% url 'core:user_list' %}?status=pending" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Pending Staff Approvals</a>
                     {% endif %}
                 </div>
             </div>
@@ -725,7 +727,7 @@
             </a>
             
             <!-- Groups - Manager, Director, Admin Only -->
-            {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' %}
+            {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
             <a href="{% url 'core:group_list' %}"
                @click="mobileMenuOpen = false"
                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all
@@ -770,11 +772,11 @@
                     <a href="{% url 'core:loan_list' %}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">All Loans</a>
                     <a href="{% url 'core:loan_create' %}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">New Application</a>
                     <a href="{% url 'core:loan_repayment_list' %}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Repayments</a>
-                    {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' %}
+                    {% if user.user_role == 'manager' or user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
                     <a href="{% url 'core:restructure_list' %}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Restructure Requests</a>
                     <a href="{% url 'core:insurance_claim_list' %}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Insurance Claims</a>
                     {% endif %}
-                    {% if user.user_role == 'director' or user.user_role == 'admin' %}
+                    {% if user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
                     <a href="{% url 'core:loan_product_list' %}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Loan Products</a>
                     {% endif %}
                 </div>
@@ -840,7 +842,7 @@
                 <span>Transactions</span>
             </a>
 
-            {% if user.user_role == 'director' or user.user_role == 'admin' %}
+            {% if user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
             <a href="{% url 'core:savings_product_list' %}"
                @click="mobileMenuOpen = false"
                class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all
@@ -857,7 +859,7 @@
     </div>
     
     <!-- COLLECTIONS MANAGEMENT - Staff, Manager, Director, Admin -->
-    {% if user.user_role in 'staff,manager,director,admin' %}
+    {% if user.user_role in 'staff,manager' %}
     <div class="mb-6">
         <h3 class="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Collections</h3>
         <div class="space-y-1">
@@ -885,7 +887,7 @@
     {% endif %}
 
     <!-- ACCOUNTING & REPORTS - Manager, Director, Admin -->
-    {% if user.user_role in 'manager,director,admin' %}
+    {% if user.user_role in 'manager,director,admin,hr' %}
     <div class="mb-6">
         <h3 class="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Accounting & Reports</h3>
         <div class="space-y-1">
@@ -984,7 +986,7 @@
                     <a href="{% url 'core:report_savings_maturity' %}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                         Savings Maturity
                     </a>
-                    {% if user.user_role in 'director,admin' %}
+                    {% if user.user_role in 'director,admin,hr' %}
                     <a href="{% url 'core:report_transaction_audit' %}" @click="mobileMenuOpen = false" class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
                         Transaction Audit
                     </a>
@@ -999,7 +1001,7 @@
     {% endif %}
 
     <!-- DATA MANAGEMENT - Manager and above (mobile) -->
-    {% if user.user_role in 'manager,director,admin' %}
+    {% if user.user_role in 'manager,director,admin,hr' %}
     <div class="mb-4">
         <h3 class="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Data Management</h3>
         <div class="space-y-1">
@@ -1017,7 +1019,7 @@
     {% endif %}
 
     <!-- SYSTEM MANAGEMENT - Director & Admin Only -->
-    {% if user.user_role == 'director' or user.user_role == 'admin' %}
+    {% if user.user_role == 'director' or user.user_role == 'admin' or user.user_role == 'hr' %}
     <div class="mb-6">
         <h3 class="px-3 mb-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">System Management</h3>
         <div class="space-y-1">

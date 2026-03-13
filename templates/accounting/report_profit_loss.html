@@ -2,7 +2,7 @@
 {% load humanize %}
 {% block content %}
 <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Profit & Loss Statement</h1>
+    <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Profit &amp; Loss Statement</h1>
 
     <!-- Filter Form -->
     <div class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -41,7 +41,7 @@
     {% if report_data %}
     <!-- Report Header -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 text-center">
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white">PROFIT & LOSS STATEMENT</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">PROFIT &amp; LOSS STATEMENT</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">
             {{ report_data.date_from|date:"Y-m-d" }} to {{ report_data.date_to|date:"Y-m-d" }}
         </p>
@@ -51,64 +51,68 @@
     </div>
 
     <!-- Income -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
         <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">INCOME</h3>
         </div>
-        <table class="min-w-full">
-            {% for item in report_data.income_items %}
-            <tr class="border-b border-gray-100 dark:border-gray-700">
-                <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200">{{ item.account.account_name }}</td>
-                <td class="px-6 py-3 text-right text-sm font-semibold text-green-600 dark:text-green-400">
-                    ₦{{ item.amount|floatformat:2|intcomma }}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="2" class="px-6 py-3 text-sm text-gray-400 dark:text-gray-500 italic">No income recorded</td>
-            </tr>
-            {% endfor %}
-            <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
-                <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">Total Income</td>
-                <td class="px-6 py-3 text-right text-sm text-green-600 dark:text-green-400">
-                    ₦{{ report_data.total_income|floatformat:2|intcomma }}
-                </td>
-            </tr>
-        </table>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                {% for item in report_data.income_items %}
+                <tr class="border-b border-gray-100 dark:border-gray-700">
+                    <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200">{{ item.account.account_name }}</td>
+                    <td class="px-6 py-3 text-right text-sm whitespace-nowrap font-semibold text-green-600 dark:text-green-400">
+                        ₦{{ item.amount|floatformat:2|intcomma }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="px-6 py-3 text-sm text-gray-400 dark:text-gray-500 italic">No income recorded</td>
+                </tr>
+                {% endfor %}
+                <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
+                    <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">Total Income</td>
+                    <td class="px-6 py-3 text-right text-sm whitespace-nowrap text-green-600 dark:text-green-400">
+                        ₦{{ report_data.total_income|floatformat:2|intcomma }}
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
 
     <!-- Expenses -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
         <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">EXPENSES</h3>
         </div>
-        <table class="min-w-full">
-            {% for item in report_data.expense_items %}
-            <tr class="border-b border-gray-100 dark:border-gray-700">
-                <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200">{{ item.account.account_name }}</td>
-                <td class="px-6 py-3 text-right text-sm font-semibold text-red-600 dark:text-red-400">
-                    ₦{{ item.amount|floatformat:2|intcomma }}
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="2" class="px-6 py-3 text-sm text-gray-400 dark:text-gray-500 italic">No expenses recorded</td>
-            </tr>
-            {% endfor %}
-            <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
-                <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">Total Expenses</td>
-                <td class="px-6 py-3 text-right text-sm text-red-600 dark:text-red-400">
-                    ₦{{ report_data.total_expenses|floatformat:2|intcomma }}
-                </td>
-            </tr>
-        </table>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                {% for item in report_data.expense_items %}
+                <tr class="border-b border-gray-100 dark:border-gray-700">
+                    <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200">{{ item.account.account_name }}</td>
+                    <td class="px-6 py-3 text-right text-sm whitespace-nowrap font-semibold text-red-600 dark:text-red-400">
+                        ₦{{ item.amount|floatformat:2|intcomma }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="px-6 py-3 text-sm text-gray-400 dark:text-gray-500 italic">No expenses recorded</td>
+                </tr>
+                {% endfor %}
+                <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
+                    <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">Total Expenses</td>
+                    <td class="px-6 py-3 text-right text-sm whitespace-nowrap text-red-600 dark:text-red-400">
+                        ₦{{ report_data.total_expenses|floatformat:2|intcomma }}
+                    </td>
+                </tr>
+            </table>
+        </div>
     </div>
 
     <!-- Net Profit/Loss -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div class="flex justify-between items-center text-xl font-bold">
             <span class="text-gray-900 dark:text-white">NET {% if report_data.net_profit >= 0 %}PROFIT{% else %}LOSS{% endif %}:</span>
-            <span class="{% if report_data.net_profit >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+            <span class="whitespace-nowrap {% if report_data.net_profit >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
                 ₦{{ report_data.net_profit|floatformat:2|intcomma }}
             </span>
         </div>

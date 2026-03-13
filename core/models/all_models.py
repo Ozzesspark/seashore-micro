@@ -263,7 +263,7 @@ class UserManager(BaseUserManager):
         return self.filter(
             is_active=True,
             is_approved=True,
-            user_role__in=['staff', 'manager', 'director', 'admin']
+            user_role__in=['staff', 'manager', 'director', 'hr', 'admin']
         )
     
     def managers(self):
@@ -295,6 +295,7 @@ class User(AbstractUser, StatusTrackingMixin):
         ('staff', 'Staff/Loan Officer'),
         ('manager', 'Branch Manager'),
         ('director', 'Director'),
+        ('hr', 'Human Resources Manager'),
         ('admin', 'System Administrator'),
     ]
     
@@ -577,11 +578,11 @@ class User(AbstractUser, StatusTrackingMixin):
 
     def save(self, *args, **kwargs):
         # Auto-generate employee_id if not set and user has a staff role
-        if not self.employee_id and self.user_role in ['staff', 'manager', 'director', 'admin']:
+        if not self.employee_id and self.user_role in ['staff', 'manager', 'director', 'hr', 'admin']:
             self.employee_id = self.generate_employee_id()
-        
+
         # Auto-set approval permissions for managers and above
-        if self.user_role in ['manager', 'director', 'admin']:
+        if self.user_role in ['manager', 'director', 'hr', 'admin']:
             self.can_approve_loans = True
             self.can_approve_accounts = True
         
@@ -631,6 +632,7 @@ class User(AbstractUser, StatusTrackingMixin):
         # Validate branch assignment for non-admin roles
         if self.user_role in ['staff', 'manager'] and not self.branch:
             errors['branch'] = f"{self.get_user_role_display()} must be assigned to a branch"
+        # director, hr, and admin operate across all branches — no branch assignment required
         
         if errors:
             raise ValidationError(errors)
@@ -645,17 +647,17 @@ class User(AbstractUser, StatusTrackingMixin):
     
     def can_approve_users(self):
         """Check if user can approve other users"""
-        return self.user_role in ['manager', 'director', 'admin'] and self.is_approved
-    
+        return self.user_role in ['manager', 'director', 'hr', 'admin'] and self.is_approved
+
     def can_approve_transactions(self):
         """Check if user can approve transactions"""
-        return self.user_role in ['manager', 'director', 'admin'] and self.is_approved
-    
+        return self.user_role in ['manager', 'director', 'hr', 'admin'] and self.is_approved
+
     def can_approve_loan_amount(self, amount):
         """Check if user can approve loan of given amount"""
         if not self.can_approve_loans:
             return False
-        if self.user_role in ['director', 'admin']:
+        if self.user_role in ['director', 'hr', 'admin']:
             return True
         if self.max_approval_amount:
             return Decimal(str(amount)) <= self.max_approval_amount
@@ -663,7 +665,7 @@ class User(AbstractUser, StatusTrackingMixin):
 
     def get_accessible_branches(self):
         """Get branches accessible to this user"""
-        if self.user_role in ['director', 'admin']:
+        if self.user_role in ['director', 'hr', 'admin']:
             return Branch.objects.active()
         elif self.user_role in ['manager', 'staff'] and self.branch:
             return Branch.objects.filter(id=self.branch_id, is_active=True)
@@ -6605,11 +6607,13 @@ class JournalEntryLine(BaseModel):
     def clean(self):
         """Validate that only one of debit or credit has value"""
         super().clean()
-        
-        if self.debit_amount > 0 and self.credit_amount > 0:
+        debit  = self.debit_amount  or Decimal('0.00')
+        credit = self.credit_amount or Decimal('0.00')
+
+        if debit > 0 and credit > 0:
             raise ValidationError("A line cannot have both debit and credit amounts")
-        
-        if self.debit_amount == 0 and self.credit_amount == 0:
+
+        if debit == 0 and credit == 0:
             raise ValidationError("A line must have either a debit or credit amount")
 
     def save(self, *args, **kwargs):
@@ -7298,12 +7302,12 @@ class AssignmentRequest(BaseModel, ApprovalWorkflowMixin):
         if user == self.requested_by:
             return False
         
-        if user.user_role in ['admin', 'director']:
+        if user.user_role in ['admin', 'director', 'hr']:
             return True
-        
+
         if user.user_role == 'manager':
             return self.branch == user.branch
-        
+
         return False
     
     @db_transaction.atomic
@@ -7850,6 +7854,122 @@ class GroupSavingsCollectionItem(BaseModel):
     
     def __str__(self):
         return f"{self.client.get_full_name()} - ₦{self.amount:,.2f}"
+
+
+# =============================================================================
+# COMBINED GROUP COLLECTION MODELS
+# =============================================================================
+
+class GroupCombinedSession(BaseModel):
+    """
+    A single collection session that captures both loan repayments and savings
+    deposits for group members in one visit.
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    group = models.ForeignKey(
+        'ClientGroup',
+        on_delete=models.CASCADE,
+        related_name='combined_sessions'
+    )
+    collected_by = models.ForeignKey(
+        'User',
+        on_delete=models.PROTECT,
+        related_name='combined_collection_sessions'
+    )
+    collection_date = models.DateField()
+    total_loan_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    total_savings_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    payment_method = models.CharField(max_length=50, default='cash')
+    payment_reference = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
+    notes = models.TextField(blank=True)
+    approved_by = models.ForeignKey(
+        'User', on_delete=models.PROTECT,
+        related_name='approved_combined_sessions',
+        null=True, blank=True
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejected_by = models.ForeignKey(
+        'User', on_delete=models.PROTECT,
+        related_name='rejected_combined_sessions',
+        null=True, blank=True
+    )
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-collection_date', '-created_at']
+
+    def __str__(self):
+        return f"Combined: {self.group.name} - {self.collection_date} - ₦{self.total_amount:,.2f}"
+
+    def get_status_display_class(self):
+        mapping = {
+            'pending': 'bg-yellow-100 text-yellow-800',
+            'approved': 'bg-green-100 text-green-800',
+            'rejected': 'bg-red-100 text-red-800',
+        }
+        return mapping.get(self.status, 'bg-gray-100 text-gray-800')
+
+
+class GroupCombinedLoanItem(BaseModel):
+    """Individual loan repayment within a combined session."""
+    session = models.ForeignKey(
+        'GroupCombinedSession',
+        on_delete=models.CASCADE,
+        related_name='loan_items'
+    )
+    loan = models.ForeignKey(
+        'Loan',
+        on_delete=models.PROTECT,
+        related_name='combined_collection_items'
+    )
+    client = models.ForeignKey(
+        'Client',
+        on_delete=models.PROTECT,
+        related_name='combined_loan_items'
+    )
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    notes = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.client.get_full_name()} - Loan ₦{self.amount:,.2f}"
+
+
+class GroupCombinedSavingsItem(BaseModel):
+    """Individual savings deposit within a combined session."""
+    session = models.ForeignKey(
+        'GroupCombinedSession',
+        on_delete=models.CASCADE,
+        related_name='savings_items'
+    )
+    savings_account = models.ForeignKey(
+        'SavingsAccount',
+        on_delete=models.PROTECT,
+        related_name='combined_collection_items'
+    )
+    client = models.ForeignKey(
+        'Client',
+        on_delete=models.PROTECT,
+        related_name='combined_savings_items'
+    )
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    notes = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.client.get_full_name()} - Savings ₦{self.amount:,.2f}"
 
 
 # =============================================================================

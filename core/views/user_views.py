@@ -109,6 +109,8 @@ def user_list(request):
             users = users.filter(is_active=True)
         elif status == 'inactive':
             users = users.filter(is_active=False)
+        elif status == 'pending':
+            users = users.filter(is_approved=False)
 
     # Pagination
     paginator = Paginator(users, 20)  # 20 users per page

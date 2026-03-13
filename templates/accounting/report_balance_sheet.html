@@ -42,87 +42,85 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <!-- Assets -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
             <div class="px-6 py-4 bg-green-50 dark:bg-green-900/30">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">ASSETS</h3>
             </div>
-            <table class="min-w-full">
-                {% for item in report_data.assets %}
-                <tr class="border-b border-gray-100 dark:border-gray-700">
-                    <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200">
-                        {{ item.account.account_name }}
-                    </td>
-                    <td class="px-6 py-3 text-right text-sm text-gray-800 dark:text-gray-200">
-                        ₦{{ item.balance|floatformat:2|intcomma }}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="2" class="px-6 py-3 text-sm text-gray-400 dark:text-gray-500 italic">No asset balances</td>
-                </tr>
-                {% endfor %}
-                <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
-                    <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">Total Assets</td>
-                    <td class="px-6 py-3 text-right text-sm text-gray-900 dark:text-white">₦{{ report_data.total_assets|floatformat:2|intcomma }}</td>
-                </tr>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    {% for item in report_data.assets %}
+                    <tr class="border-b border-gray-100 dark:border-gray-700">
+                        <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200">{{ item.account.account_name }}</td>
+                        <td class="px-6 py-3 text-right text-sm whitespace-nowrap text-gray-800 dark:text-gray-200">₦{{ item.balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="px-6 py-3 text-sm text-gray-400 dark:text-gray-500 italic">No asset balances</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
+                        <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">Total Assets</td>
+                        <td class="px-6 py-3 text-right text-sm whitespace-nowrap text-gray-900 dark:text-white">₦{{ report_data.total_assets|floatformat:2|intcomma }}</td>
+                    </tr>
+                </table>
+            </div>
         </div>
 
         <!-- Liabilities & Equity -->
         <div class="space-y-6">
 
             <!-- Liabilities -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
                 <div class="px-6 py-4 bg-red-50 dark:bg-red-900/30">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">LIABILITIES</h3>
                 </div>
-                <table class="min-w-full">
-                    {% for item in report_data.liabilities %}
-                    <tr class="border-b border-gray-100 dark:border-gray-700">
-                        <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200">
-                            {{ item.account.account_name }}
-                        </td>
-                        <td class="px-6 py-3 text-right text-sm text-gray-800 dark:text-gray-200">
-                            ₦{{ item.balance|floatformat:2|intcomma }}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="2" class="px-6 py-3 text-sm text-gray-400 dark:text-gray-500 italic">No liability balances</td>
-                    </tr>
-                    {% endfor %}
-                    <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
-                        <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">Total Liabilities</td>
-                        <td class="px-6 py-3 text-right text-sm text-gray-900 dark:text-white">₦{{ report_data.total_liabilities|floatformat:2|intcomma }}</td>
-                    </tr>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        {% for item in report_data.liabilities %}
+                        <tr class="border-b border-gray-100 dark:border-gray-700">
+                            <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200">{{ item.account.account_name }}</td>
+                            <td class="px-6 py-3 text-right text-sm whitespace-nowrap text-gray-800 dark:text-gray-200">₦{{ item.balance|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="px-6 py-3 text-sm text-gray-400 dark:text-gray-500 italic">No liability balances</td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
+                            <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">Total Liabilities</td>
+                            <td class="px-6 py-3 text-right text-sm whitespace-nowrap text-gray-900 dark:text-white">₦{{ report_data.total_liabilities|floatformat:2|intcomma }}</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
 
             <!-- Equity -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
                 <div class="px-6 py-4 bg-blue-50 dark:bg-blue-900/30">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">EQUITY</h3>
                 </div>
-                <table class="min-w-full">
-                    {% for item in report_data.equity %}
-                    <tr class="border-b border-gray-100 dark:border-gray-700">
-                        <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200">
-                            {% if item.account %}{{ item.account.account_name }}{% else %}{{ item.account_name }}{% endif %}
-                        </td>
-                        <td class="px-6 py-3 text-right text-sm {% if item.balance >= 0 %}text-gray-800 dark:text-gray-200{% else %}text-red-600 dark:text-red-400{% endif %}">
-                            ₦{{ item.balance|floatformat:2|intcomma }}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="2" class="px-6 py-3 text-sm text-gray-400 dark:text-gray-500 italic">No equity balances</td>
-                    </tr>
-                    {% endfor %}
-                    <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
-                        <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">Total Equity</td>
-                        <td class="px-6 py-3 text-right text-sm text-gray-900 dark:text-white">₦{{ report_data.total_equity|floatformat:2|intcomma }}</td>
-                    </tr>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        {% for item in report_data.equity %}
+                        <tr class="border-b border-gray-100 dark:border-gray-700">
+                            <td class="px-6 py-3 text-sm text-gray-800 dark:text-gray-200">
+                                {% if item.account %}{{ item.account.account_name }}{% else %}{{ item.account_name }}{% endif %}
+                            </td>
+                            <td class="px-6 py-3 text-right text-sm whitespace-nowrap {% if item.balance >= 0 %}text-gray-800 dark:text-gray-200{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                ₦{{ item.balance|floatformat:2|intcomma }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="px-6 py-3 text-sm text-gray-400 dark:text-gray-500 italic">No equity balances</td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
+                            <td class="px-6 py-3 text-sm text-gray-900 dark:text-white">Total Equity</td>
+                            <td class="px-6 py-3 text-right text-sm whitespace-nowrap text-gray-900 dark:text-white">₦{{ report_data.total_equity|floatformat:2|intcomma }}</td>
+                        </tr>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
